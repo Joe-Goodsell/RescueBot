@@ -18,7 +18,9 @@ public class Character {
     protected final BodyType DEFAULT_BODYTYPE = BodyType.UNSPECIFIED;
     protected final int DEFAULT_AGE = 10;
 
-
+    /*
+    CONSTRUCTORS
+     */
     public Character() {
         // initialise Character with defaults
         this.gender = DEFAULT_GENDER;
@@ -36,10 +38,19 @@ public class Character {
         this(that.getGender(), that.getAge(), that.getBodyType());
     }
 
+    /*
+    METHODS
+     */
+    public Character copy() {
+        return new Character(this);
+    }
     public String toString() {
        return "a stock character";
     }
 
+    /*
+    GETTERS AND SETTERS
+     */
     public void setBodyType(BodyType bodyType) {
         this.bodyType = bodyType;
     }

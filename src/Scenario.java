@@ -5,46 +5,51 @@ public class Scenario {
     enum Disaster{
         FLOOD, BUSHFIRE, CYCLONE
     }
-    enum Legality {
-        TRESPASSING, LEGAL
-    }
+
 
 
     public final Disaster DEFAULT_DISASTER = Disaster.BUSHFIRE;
-    public final Legality DEFAULT_LEGALITY = Legality.LEGAL;
-    private ArrayList<Character> characters = new ArrayList<>();
-
-    private Location location;
     private Disaster disaster;
-    private Legality legality;
+    private ArrayList<Location> locations;
+    private boolean isBlank;
+
 
     public Scenario() {
+        this.isBlank = false;
+        this.locations = new ArrayList<Location>();
+    }
 
+    public Scenario(boolean asBlank) {
+        this.isBlank = asBlank;
     }
-    public Scenario(Disaster disaster, Legality legality, Location location) {
+    public Scenario(Disaster disaster, ArrayList<Location> locations) {
+        this();
         this.disaster = disaster;
-        this.legality = legality;
-        this.location = location;
-    }
-    public Scenario(Disaster disaster, Legality legality, Location location, ArrayList<Character> characters) {
-        this(disaster, legality, location);
-        this.characters = characters;
+        this.locations = locations;
     }
 
     public Scenario(Scenario that) {
-        this(that.getDisasterType(), that.getLegality(), that.getLocation(),that.getCharacters());
+        this(that.getDisasterType(), that.getLocations());
+    }
+
+    /*
+    GETTERS AND SETTERS
+     */
+    public boolean isBlank() {
+        return isBlank;
+    }
+    public Scenario copy() {
+        return new Scenario(this);
+    }
+    public void addLocation(Location location) {
+        locations.add(location);
     }
     public Disaster getDisasterType() {
         return this.disaster;
     }
-    public Legality getLegality() {
-        return this.legality;
-    }
-    public ArrayList<Character> getCharacters() {
-        return this.characters;
-    }
-    public Location getLocation() {
-        return this.location;
+
+    public ArrayList<Location> getLocations() {
+        return this.locations;
     }
     public void setDisasterType(Disaster disaster) {
         this.disaster = disaster;
@@ -52,19 +57,7 @@ public class Scenario {
     public void setDisasterType() {
         this.disaster = DEFAULT_DISASTER;
     }
-    public void setLegality(Legality legality) { this.legality = legality; }
-    public void setLegality() { this.legality = DEFAULT_LEGALITY; }
-    public void setLocation() {
-        this.location = new Location();
-    }
-    public void setLocation(Location location) {
-        this.location = location;
-    }
 
-    public void addCharacter(Character character) {
-    }
 
-    public int getNumCharacters() {
-      return characters.size();
-    }
 }
+

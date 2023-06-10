@@ -7,11 +7,33 @@ public class Animal extends Character {
     private boolean isPet;
     private Species species;
 
+    /*
+    CONSTRUCTORS
+     */
+
     public Animal() {
         // initialises with default values
         super();
         isPet = false;
         species = DEFAULT_SPECIES;
+    }
+
+    public Animal(Gender gender, int age, BodyType bodyType, Species species, boolean isPet) {
+        super(gender, age, bodyType);
+        this.species = species;
+        this.isPet = isPet;
+    }
+
+    public Animal(Animal that) {
+        this(that.gender, that.age, that.bodyType, that.species, that.isPet);
+    }
+
+    /*
+    METHODS
+     */
+    @Override
+    public Animal copy() {
+        return new Animal(this);
     }
 
     public String toString() {
@@ -21,6 +43,10 @@ public class Animal extends Character {
         }
         return out;
     }
+
+    /*
+    GETTERS AND SETTERS
+     */
 
     public void setSpecies(Species species) {
         this.species = species;

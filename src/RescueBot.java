@@ -19,7 +19,7 @@ public class RescueBot {
      * param Scenario scenario: the ethical dilemma
      * return Decision: which group to save
      */
-//    public static Location decide(Scenario scenario) {
+//    public static Coordinates decide(Scenario scenario) {
 //        // a very simple decision engine
 //        // TODO: take into account at least 5 characteristics
 //
@@ -74,9 +74,6 @@ public class RescueBot {
             }
         }
     }
-
-    private static
-
 
 
     private static void printWarnings() {

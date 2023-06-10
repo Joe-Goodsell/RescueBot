@@ -1,9 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.*;
 import java.util.stream.Stream;
-import java.util.zip.DataFormatException;
 
 
 public class ScenarioManager {
@@ -66,7 +64,8 @@ public class ScenarioManager {
 
     public void parseCSV(File file) throws FileNotFoundException {
         Scenario currentScenario = null;
-        List<String> values;
+        Location currentLocation = null;
+
         int lineNumber = 0;
         Scanner parser;
         parser = new Scanner(file);
@@ -74,11 +73,14 @@ public class ScenarioManager {
 
         while (parser.hasNextLine()) {
             lineNumber++;
-            currentScenario = parseLine(parser.nextLine(), lineNumber, currentScenario);
+            Object[] current = parseLine(parser.nextLine(), lineNumber, currentScenario, currentLocation, false);
+            currentScenario = (Scenario) current[0];
+            currentLocation = (Location) current[1];
         }
+        Object[] dummy = parseLine("", 0, currentScenario, currentLocation, true); // required for adding final scenario
     }
 
-    public Scenario parseLine(String line, int lineNumber, Scenario currentScenario) {
+    public Object[] parseLine(String line, int lineNumber, Scenario currentScenario, Location currentLocation, boolean cleanup) {
         Character currentCharacter = null;
         String[] elements = line.split(",");
 
@@ -88,18 +90,25 @@ public class ScenarioManager {
             if (elements.length != 8) {
                 throw new InvalidDataFormatException();
             }
-        } catch (InvalidDataFormatException e) {
-            String warning = String.format("WARNING: invalid data format in scenarios file in line %d", lineNumber);
-            warnings.add(warning);
+        } catch (InvalidDataFormatException ignored) { };
+
+        if (cleanup) {
+            if (currentScenario != null) {
+                currentScenario.addLocation(currentLocation.copy());
+                scenarios.add(currentScenario.copy());
+            }
+            return new Object[] { null, null };
         }
 
         if (elements[0].contains("scenario")) {
 
             // create new scenario, saving old one if it exists
             if (currentScenario != null) {
-                scenarios.add(new Scenario(currentScenario));
+                currentScenario.addLocation(currentLocation.copy());
+                scenarios.add(currentScenario.copy());
             }
             currentScenario = new Scenario();
+            currentLocation = null;
 
             String disasterTypeString = elements[0].substring(elements[0].indexOf(":") + 1);
             Scenario.Disaster disasterType = Stream.of(Scenario.Disaster.values())
@@ -113,31 +122,27 @@ public class ScenarioManager {
             } catch (InvalidCharacteristicException e) {
                 currentScenario.setDisasterType();
             }
-            return currentScenario; // go to next line
+            return new Object[] { currentScenario, currentLocation }; // go to next line
         } else if (elements[0].contains("location")) {
-            if (currentScenario.getLocation() != null) { // if current scenario already has location data, we need to create a new scenario
-                if (currentScenario != null) {
-                    scenarios.add(new Scenario(currentScenario));
-                }
-                currentScenario = new Scenario();
-            }
-            String[] data = elements[0].substring(elements[0].indexOf(":") + 1).split(";");
-            currentScenario.setLocation(new Location(data[0], data[1]));
+            // create new Location
 
-            Scenario.Legality legality = Stream.of(Scenario.Legality.values())
+             String[] data = elements[0].substring(elements[0].indexOf(":") + 1).split(";");
+             currentLocation = new Location(new Coordinates(data[0], data[1]));
+
+            Location.Legality legality = Stream.of(Location.Legality.values())
                     .filter(p -> p.toString().equalsIgnoreCase(data[2]))
                     .findFirst()
                     .orElse(null);
             try {
                 if (legality != null) {
-                    currentScenario.setLegality(legality);
+                    currentLocation.setLegality(legality);
                 } else throw new InvalidCharacteristicException(lineNumber);
             } catch (InvalidCharacteristicException e) {
-                currentScenario.setLegality();
+                currentLocation.setLegality();
                 String warning = String.format("WARNING: invalid characteristic in scenarios file in line %d", lineNumber);
                 warnings.add(warning);
             }
-            return currentScenario; // go to next line
+            return new Object[] { currentScenario, currentLocation }; // go to next line
         } else {
             try {
                 if (elements[0].equalsIgnoreCase("human")) {
@@ -148,7 +153,7 @@ public class ScenarioManager {
                     throw new InvalidCharacteristicException(lineNumber);
                 }
             } catch (InvalidCharacteristicException e) {
-                return currentScenario;
+                return new Object[] { currentScenario, currentLocation };
             }
         }
 
@@ -200,8 +205,8 @@ public class ScenarioManager {
             }
 
             ((Person) currentCharacter).setIsPregnant(elements[5].equalsIgnoreCase("true"));
-
-        } else {
+            currentLocation.addCharacter(currentCharacter.copy());
+        } else { // current character is an Animal
             Animal.Species species = Stream.of(Animal.Species.values())
                     .filter(p -> p.toString().equalsIgnoreCase(elements[6]))
                     .findFirst()
@@ -213,7 +218,6 @@ public class ScenarioManager {
             } catch (InvalidCharacteristicException e) {
                 currentCharacter.setBodyType(); // set default
             }
-
             try {
                 if (elements[7].equalsIgnoreCase("true")) {
                     ((Animal) currentCharacter).setIsPet(true);
@@ -223,13 +227,11 @@ public class ScenarioManager {
             } catch (InvalidCharacteristicException e) {
                 ((Animal) currentCharacter).setIsPet();
             }
+            currentLocation.addCharacter(currentCharacter.copy());
         }
-
-        return currentScenario;
+        currentCharacter = null;
+        return new Object[] { currentScenario, currentLocation };
     }
-
-
-
 
     public ArrayList<String> getWarnings() {
         return warnings;

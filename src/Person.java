@@ -13,6 +13,11 @@ public class Person extends Character {
 
     private boolean pregnant;
 
+
+    /*
+    CONSTRUCTORS
+     */
+
    public Person() {
        // initialises with default values
         super();
@@ -21,6 +26,26 @@ public class Person extends Character {
         this.profession = DEFAULT_PROFESSION;
    }
 
+
+   public Person(Gender gender, int age, BodyType bodyType, boolean pregnant, Profession profession) {
+       super(gender, age, bodyType);
+       this.initAgeCategory();
+       this.setIsPregnant(pregnant);
+       this.profession = profession;
+   }
+
+   public Person(Person that) {
+       this(that.gender, that.age, that.bodyType, that.pregnant, that.profession);
+       this.initAgeCategory();
+   }
+
+   /*
+   METHODS
+    */
+    @Override
+    public Person copy() {
+        return new Person(this);
+    }
    public void initRandom() {
        super.initRandom();
         // classify person based on age
@@ -44,6 +69,9 @@ public class Person extends Character {
        }
    }
 
+   /*
+   GETTERS AND SETTERS
+    */
    public void setProfession(Profession profession) {
        this.profession = profession;
    }
