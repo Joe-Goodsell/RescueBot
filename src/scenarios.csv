@@ -1,5 +1,5 @@
 ,gender,age,bodyType,profession,pregnant,species,isPet
-scenario:flood,,,,,,,
+scenario:flod,,,,,,,
 location:13.7154 N;150.9094 W;trespassing,,,,,,,
 human,female,16,overweight,none,false,,
 animal,female,8,overweight,,,cat,true

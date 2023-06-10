@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /**
@@ -10,7 +11,8 @@ import java.util.Scanner;
 public class RescueBot {
 
     public static LogfileHandler logfileHandler;
-    public static ScenarioManager scenariosFileHandler;
+    public static ScenarioManager scenarioManager;
+    public static Scanner keyboard = new Scanner(System.in);
 
     /**
      * Decides whether to save the passengers or the pedestrians
@@ -35,31 +37,79 @@ public class RescueBot {
     public static void main(String[] args){
 
         logfileHandler = new LogfileHandler();
-        scenariosFileHandler = new ScenarioManager();
+        scenarioManager = new ScenarioManager();
 
         parseArgs(args);
-
-        try {
-            printWelcome();
-        } catch (FileNotFoundException e) {
-            System.exit(1);
-        }
-
+        printWelcome();
+        printWarnings();
+        printScenariosImported();
+        printMainMenu();
+        awaitUserInput();
     }
 
-    private static void printWelcome() throws FileNotFoundException {
+    private static void awaitUserInput() {
+        System.out.print("› ");
+        String input = keyboard.next();
+        switch (input) {
+            case "judge", "j" -> {
+                //
+                break;
+            }
+            case "run", "r" -> {
+                //
+                break;
+            }
+            case "audit", "a" -> {
+                //
+                break;
+            }
+            case "quit", "q" -> {
+                //
+                break;
+            }
+            default -> {
+                System.out.println("Invalid command! Please enter one of the following commands to continue:");
+                printMainMenu();
+                awaitUserInput();
+            }
+        }
+    }
+
+    private static
+
+
+
+    private static void printWarnings() {
+        ArrayList<String> warnings = scenarioManager.getWarnings();
+        for (String warning : warnings) {
+           System.out.println(warning);
+        }
+    }
+
+    private static void printScenariosImported() {
+        int numScenariosImported = scenarioManager.getNumScenarios();
+        System.out.printf("%d scenarios imported.%n", numScenariosImported);
+    }
+
+    private static void printMainMenu() {
+        System.out.println("Please enter one of the following commands to continue:");
+        System.out.println("- judge scenarios: [judge] or [j]");
+        System.out.println("- run simulations with the in-built decision algorithm: [run] or [r]");
+        System.out.println("- show audit from history: [audit] or [a]");
+        System.out.println("- quit the program: [quit] or [q]");
+    }
+
+    private static void printWelcome() {
         File welcome = new File("welcome.ascii");
-        Scanner printStream = null;
         try {
-            printStream = new Scanner(new FileInputStream(welcome));
+            Scanner printStream = new Scanner(new FileInputStream(welcome));
             while (printStream.hasNextLine()) {
                 String line = printStream.nextLine();
                 System.out.println(line);
             }
-            printStream.close();
         }
         catch (FileNotFoundException e) {
-            System.out.println("welcome text file not found.");
+            System.err.println("ERROR: Welcome text file not found.");
             System.exit(1);
         }
     }
@@ -82,25 +132,29 @@ public class RescueBot {
                 System.exit(0);
             } else if (args[i].equalsIgnoreCase("-s") || args[i].equalsIgnoreCase("--scenarios")) {
                 if (i == args.length-1) {
-                    System.out.println("Error: no scenario file provided.");
+                    System.err.println("ERROR: no scenario file provided.");
                     printHelp();
                     System.exit(1);
                 } else {
-                    try {
-                        scenariosFileHandler.checkFile(args[++i]);
+                    File file;
+                    file = new File(args[++i]);
+                   try {
+                       scenarioManager.loadFromFile(file);
                     } catch (FileNotFoundException e) {
-                        throw new RuntimeException(e);
+                       System.err.println(e.getClass().getCanonicalName() + ": could not find scenarios file.");
+                       System.exit(1);
                     }
                 }
             } else if (args[i].equalsIgnoreCase("-l") || args[i].equalsIgnoreCase("--logfile")) {
                 if (i == args.length-1) {
+                    System.err.println("ERROR: no scenario file provided.");
                     printHelp();
                     System.exit(1);
                 } else {
                     try {
                         logfileHandler.checkFile(args[++i]);
                     } catch (FileNotFoundException e) {
-                        throw new RuntimeException(e);
+                        System.err.println("WARNING: logfile not found!");
                     }
                 }
             }

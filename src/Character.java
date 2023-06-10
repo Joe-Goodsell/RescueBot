@@ -7,16 +7,11 @@ public class Character {
     protected BodyType bodyType;
 
     enum BodyType {
-        AVERAGE,
-        ATHLETIC,
-        OVERWEIGHT,
-        UNSPECIFIED
+        AVERAGE, ATHLETIC, OVERWEIGHT, UNSPECIFIED
     }
 
     enum Gender {
-        MALE,
-        FEMALE,
-        UNKNOWN
+        MALE, FEMALE, UNKNOWN
     }
 
     protected final Gender DEFAULT_GENDER = Gender.UNKNOWN;
@@ -29,6 +24,54 @@ public class Character {
         this.gender = DEFAULT_GENDER;
         this.age = DEFAULT_AGE;
         this.bodyType = DEFAULT_BODYTYPE;
+    }
+
+    public Character(Gender gender, int age, BodyType bodyType) {
+        this.gender = gender;
+        this.age = age;
+        this.bodyType = bodyType;
+    }
+
+    public Character(Character that) {
+        this(that.getGender(), that.getAge(), that.getBodyType());
+    }
+
+    public String toString() {
+       return "a stock character";
+    }
+
+    public void setBodyType(BodyType bodyType) {
+        this.bodyType = bodyType;
+    }
+    public void setBodyType() {
+        this.bodyType = DEFAULT_BODYTYPE;
+    }
+
+    public void setGender(Gender gender) {
+        this.gender = gender;
+    }
+
+    public void setGender() {
+        this.gender = DEFAULT_GENDER;
+    }
+
+    public Gender getGender() {
+        return this.gender;
+    }
+    public int getAge() {
+        return this.age;
+    }
+    public BodyType getBodyType() {
+        return this.bodyType;
+    }
+
+    public void setAge(int age) {
+        assert age > 0;
+        this.age = age;
+    }
+
+    public void setAge() {
+        this.age = DEFAULT_AGE;
     }
 
     public void initRandom() {

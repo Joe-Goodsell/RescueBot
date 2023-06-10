@@ -1,4 +1,4 @@
-public class Animal {
+public class Animal extends Character {
 
     enum Species {
         KOALA, KANGAROO, POSSUM, PLATYPUS, CAT, WALLABY, DOG, DINGO, UNKNOWN
@@ -20,5 +20,18 @@ public class Animal {
             out = String.join(" ", out, "is pet");
         }
         return out;
+    }
+
+    public void setSpecies(Species species) {
+        this.species = species;
+    }
+    public void setSpecies() {
+        this.species = DEFAULT_SPECIES;
+    }
+    public void setIsPet(boolean isPet) {
+        this.isPet = isPet;
+    }
+    public void setIsPet() {
+        this.isPet = false;
     }
 }

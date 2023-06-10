@@ -43,7 +43,19 @@ public class Person extends Character {
            this.ageCategory = AgeCategory.SENIOR;
        }
    }
-    public String toString() {
+
+   public void setProfession(Profession profession) {
+       this.profession = profession;
+   }
+   public void setProfession() {
+       this.profession = DEFAULT_PROFESSION;
+   }
+   public void setIsPregnant(boolean isPregnant) {
+       this.pregnant = isPregnant && this.gender == Gender.FEMALE;
+   }
+
+
+   public String toString() {
         String out = String.join(" ", bodyType.toString().toLowerCase(), ageCategory.toString().toLowerCase());
         if (!profession.equals(Profession.NONE)) {
             out = String.join(" ", out, profession.toString().toLowerCase());
