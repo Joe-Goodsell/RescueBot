@@ -7,14 +7,18 @@ import java.util.stream.Stream;
 public class ScenarioManager {
 
     protected class InvalidDataFormatException extends Exception {
-        public InvalidDataFormatException() {
+        public InvalidDataFormatException(int lineNumber) {
             super();
+            String warning = String.format("WARNING: invalid data format in scenarios file in line %d", lineNumber);
+            warnings.add(warning);
         }
     }
 
     protected class NumberFormatException extends java.lang.NumberFormatException {
-        public NumberFormatException() {
+        public NumberFormatException(int lineNumber) {
             super();
+            String warning = String.format("WARNING: invalid number format in scenarios file in line %d", lineNumber);
+            warnings.add(warning);
         }
     }
 
@@ -34,12 +38,16 @@ public class ScenarioManager {
 
     }
 
-    public void loadFromFile(File scenarioFile) throws FileNotFoundException {
+    public void loadFromScenariosFile(File scenarioFile) throws FileNotFoundException {
         try {
             parseCSV(scenarioFile);
         } catch (FileNotFoundException e) {
             throw new FileNotFoundException();
         }
+    }
+
+    public void writeLogFile() {
+
     }
 
 
@@ -82,15 +90,7 @@ public class ScenarioManager {
 
     public Object[] parseLine(String line, int lineNumber, Scenario currentScenario, Location currentLocation, boolean cleanup) {
         Character currentCharacter = null;
-        String[] elements = line.split(",");
-
-        Arrays.asList(elements).forEach(e -> System.out.print(e + "|"));
-        System.out.println();
-        try {
-            if (elements.length != 8) {
-                throw new InvalidDataFormatException();
-            }
-        } catch (InvalidDataFormatException ignored) { };
+        String[] elements = line.split(",", -1);
 
         if (cleanup) {
             if (currentScenario != null) {
@@ -122,9 +122,17 @@ public class ScenarioManager {
             } catch (InvalidCharacteristicException e) {
                 currentScenario.setDisasterType();
             }
-            return new Object[] { currentScenario, currentLocation }; // go to next line
+            return new Object[] { currentScenario, null }; // go to next line
         } else if (elements[0].contains("location")) {
+
+            if (currentLocation != null) {
+                // if currentLocation already exists, add it to the current scenario
+                assert (currentScenario != null) : "Error: trying to add location to non-existent scenario.";
+                currentScenario.addLocation(currentLocation.copy());
+            }
+
             // create new Location
+            currentLocation = new Location();
 
              String[] data = elements[0].substring(elements[0].indexOf(":") + 1).split(";");
              currentLocation = new Location(new Coordinates(data[0], data[1]));
@@ -139,8 +147,6 @@ public class ScenarioManager {
                 } else throw new InvalidCharacteristicException(lineNumber);
             } catch (InvalidCharacteristicException e) {
                 currentLocation.setLegality();
-                String warning = String.format("WARNING: invalid characteristic in scenarios file in line %d", lineNumber);
-                warnings.add(warning);
             }
             return new Object[] { currentScenario, currentLocation }; // go to next line
         } else {
@@ -152,7 +158,8 @@ public class ScenarioManager {
                 } else {
                     throw new InvalidCharacteristicException(lineNumber);
                 }
-            } catch (InvalidCharacteristicException e) {
+                if (elements.length != 8) { throw new InvalidDataFormatException(lineNumber); }
+            } catch (InvalidCharacteristicException | InvalidDataFormatException e) {
                 return new Object[] { currentScenario, currentLocation };
             }
         }
@@ -170,7 +177,12 @@ public class ScenarioManager {
             currentCharacter.setGender(); // set default
         }
         try {
-            int age = Integer.parseInt(elements[2]);
+            int age;
+            try {
+                age = Integer.parseInt(elements[2]);
+            } catch (NumberFormatException ignored) {
+                throw new NumberFormatException(lineNumber);
+            }
             if (age > 0) {
                 currentCharacter.setAge(age);
             } else throw new InvalidCharacteristicException(lineNumber);
@@ -240,5 +252,4 @@ public class ScenarioManager {
     public int getNumScenarios() {
         return scenarios.size();
     }
-
 }

@@ -4,7 +4,7 @@ public class Person extends Character {
         BABY, CHILD, ADULT, SENIOR
     }
     enum Profession {
-        DOCTOR, CEO, CRIMINAL, HOMELESS,
+        DOCTOR, CEO, CRIMINAL, HOMELESS, STUDENT, PROFESSOR,
         UNEMPLOYED, PROGRAMMER, NURSE, TEACHER, NONE
     }
     private final Profession DEFAULT_PROFESSION = Profession.NONE;
@@ -22,7 +22,7 @@ public class Person extends Character {
        // initialises with default values
         super();
         initAgeCategory();
-        this.pregnant = pregnant;
+        this.pregnant = false;
         this.profession = DEFAULT_PROFESSION;
    }
 
@@ -46,7 +46,8 @@ public class Person extends Character {
     public Person copy() {
         return new Person(this);
     }
-   public void initRandom() {
+
+    public void initRandom() {
        super.initRandom();
         // classify person based on age
 
@@ -82,7 +83,16 @@ public class Person extends Character {
        this.pregnant = isPregnant && this.gender == Gender.FEMALE;
    }
 
+    public AgeCategory getAgeCategory() {
+       return this.ageCategory;
+    }
+    public Profession getProfession() {
+       return this.profession;
+    }
 
+    public boolean getIsPregnant() {
+       return pregnant;
+    }
    public String toString() {
         String out = String.join(" ", bodyType.toString().toLowerCase(), ageCategory.toString().toLowerCase());
         if (!profession.equals(Profession.NONE)) {

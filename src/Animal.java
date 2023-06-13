@@ -47,7 +47,12 @@ public class Animal extends Character {
     /*
     GETTERS AND SETTERS
      */
-
+    public Species getSpecies() {
+        return this.species;
+    }
+    public boolean getIsPet() {
+        return this.isPet;
+    }
     public void setSpecies(Species species) {
         this.species = species;
     }

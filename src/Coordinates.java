@@ -14,6 +14,13 @@ public class Coordinates {
         this.longitude = DEFAULT_LONGITUDE;
     }
 
+    public String getLatitude() {
+        return this.latitude;
+    }
+    public String getLongitude() {
+        return this.longitude;
+    }
+
     public void setLatitude(String latitude) {
         this.latitude = latitude;
     }
