@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class Scenario {
 
@@ -7,8 +9,11 @@ public class Scenario {
         FLOOD, BUSHFIRE, CYCLONE
     }
 
-    private int userChoice;
-    private int algoChoice;
+    private Optional<Integer> userChoice;
+    private Optional<Integer> algoChoice;
+
+    private double avgAge;
+    private int avgAgeWeight;
 
     private HashMap<String,Statistic> userStatistics;
     private HashMap<String,Statistic> algoStatistics;
@@ -25,7 +30,10 @@ public class Scenario {
      */
     public Scenario() {
         this.userStatistics = new HashMap<>();
+        this.algoStatistics = new HashMap<>();
         this.locations = new ArrayList<Location>();
+        this.userChoice = Optional.empty();
+        this.algoChoice = Optional.empty();
     }
 
     public Scenario(Disaster disaster, ArrayList<Location> locations) {
@@ -36,12 +44,20 @@ public class Scenario {
 
     public Scenario(Scenario that) {
         this(that.getDisasterType(), that.getLocations());
+        this.userChoice = that.getUserChoice();
+        this.algoChoice = that.getAlgoChoice();
         this.userStatistics = that.userStatistics;
         this.algoStatistics = that.algoStatistics;
     }
     /*
     METHODS
      */
+
+    public String toLogString() {
+        String optUserChoice = (userChoice.isPresent()) ? Integer.toString(userChoice.get()) : "null";
+        String optAlgoChoice = (algoChoice.isPresent()) ? Integer.toString(algoChoice.get()) : "null";
+        return String.format("scenario:%s;USER_CHOICE:%s;ALGO_CHOICE:%s,,,,,,,", disaster.toString().toLowerCase(), optUserChoice, optAlgoChoice);
+    }
 
     public Scenario copy() {
         return new Scenario(this);
@@ -65,8 +81,6 @@ public class Scenario {
         }
     }
 
-
-
     /*
     GETTERS AND SETTERS
      */
@@ -87,65 +101,105 @@ public class Scenario {
         return stat;
     }
 
-    public void updateStatistics(boolean user) {
-        HashMap<String, Statistic> hm = (user) ? userStatistics : algoStatistics;
+    public void updateStatistics() throws NoSuchElementException {
+        updateStatisticsHelper(true);
+        updateStatisticsHelper(false);
+    }
+    public void updateUserStatistics() throws NoSuchElementException {
+        updateStatisticsHelper(true);
+    }
+    public void updateAlgoStatistics() throws NoSuchElementException {
+        updateStatisticsHelper(false);
+    }
+    private void updateStatisticsHelper(boolean isUser) throws NoSuchElementException {
+        HashMap<String, Statistic> hm = (isUser) ? userStatistics : algoStatistics;
 
         int ageTotal = 0;
+        int counter = 0;
         for (int i=0; i < locations.size(); i++) {
             Location location = locations.get(i);
-            boolean isUserChoice = (userChoice == i + 1);
+
+            int choice = 0;
+            try {
+                choice = (isUser) ? userChoice.get() : algoChoice.get();
+            } catch (NoSuchElementException e) {
+                throw new NoSuchElementException();
+            }
+            boolean isChoice = (choice == i + 1);
             boolean trespassing = location.getLegality().toString().equalsIgnoreCase("trespassing");
             ArrayList<Character> characters = location.getCharacters();
-            int counter = 0;
+
             for (Character character : characters) {
                 if (trespassing) {
                     hm.put("trespassing",
-                            statIncrementer(isUserChoice, hm.getOrDefault("trespassing", new Statistic())));
+                            statIncrementer(isChoice, hm.getOrDefault("trespassing", new Statistic())));
                 }
 
                 hm.put(character.getGender().toString(),
-                        statIncrementer(isUserChoice, hm.getOrDefault(character.getGender().toString(), new Statistic())));
+                        statIncrementer(isChoice, hm.getOrDefault(character.getGender().toString(), new Statistic())));
                 hm.put(character.getBodyType().toString(),
-                        statIncrementer(isUserChoice, hm.getOrDefault(character.getBodyType().toString(), new Statistic())));
+                        statIncrementer(isChoice, hm.getOrDefault(character.getBodyType().toString(), new Statistic())));
 
                 if (character instanceof Animal) {
+                    hm.put("animal",
+                            statIncrementer(  isChoice, hm.getOrDefault("animal", new Statistic())));
                     if (((Animal) character).getIsPet()) {
                         hm.put("pet",
-                                statIncrementer(isUserChoice, hm.getOrDefault("pet", new Statistic())));
+                                statIncrementer(  isChoice, hm.getOrDefault("pet", new Statistic())));
                     }
                     hm.put(((Animal) character).getSpecies().toString(),
-                            statIncrementer(isUserChoice, hm.getOrDefault(((Animal) character).getSpecies().toString(), new Statistic())));
+                            statIncrementer(  isChoice, hm.getOrDefault(((Animal) character).getSpecies().toString(), new Statistic())));
                 } else if (character instanceof Person) {
+                    hm.put("human",
+                            statIncrementer(  isChoice, hm.getOrDefault("human", new Statistic())));
                     hm.put(((Person) character).getAgeCategory().toString(),
-                            statIncrementer(isUserChoice, hm.getOrDefault(((Person) character).getAgeCategory().toString(), new Statistic())));
+                            statIncrementer(  isChoice, hm.getOrDefault(((Person) character).getAgeCategory().toString(), new Statistic())));
                     hm.put(((Person) character).getProfession().toString(),
-                            statIncrementer(isUserChoice, hm.getOrDefault(((Person) character).getProfession().toString(), new Statistic())));
+                            statIncrementer(  isChoice, hm.getOrDefault(((Person) character).getProfession().toString(), new Statistic())));
                     if (((Person) character).getIsPregnant()) {
                         hm.put("pregnant",
-                                statIncrementer(isUserChoice, hm.getOrDefault("pregnant", new Statistic())));
+                                statIncrementer(  isChoice, hm.getOrDefault("pregnant", new Statistic())));
                     }
                     ageTotal = ageTotal + character.getAge();
                     counter++;
                 }
             }
         }
+        avgAge = ((double) ageTotal) / counter;
+        avgAgeWeight = counter;
     }
 
     // choices are indexed from 1!
+
+    private void checkChoice(int choice) throws InvalidInputException {
+        /*
+         TODO: do I need this?
+          */
+    }
     public void setUserChoice(int choice) throws InvalidInputException {
-        if (choice > 0 && choice <= this.locations.size()+1) {
+        this.userChoice = Optional.of(choice);
+    }
+
+    public void setUserChoice(Optional<Integer> choice) throws InvalidInputException {
+        if (choice.isPresent()) {
             this.userChoice = choice;
         } else throw new InvalidInputException();
-
-        updateStatistics(true);
     }
 
     public void setAlgoChoice(int choice) throws InvalidInputException {
-        if (choice > 0 && choice <= this.locations.size()+1) {
+        this.algoChoice = Optional.of(choice);
+    }
+    public void setAlgoChoice(Optional<Integer> choice) throws InvalidInputException {
+        if (choice.isPresent()) {
             this.algoChoice = choice;
         } else throw new InvalidInputException();
+    }
 
-        updateStatistics(false);
+    public Optional<Integer> getUserChoice() {
+        return this.userChoice;
+    }
+    public Optional<Integer> getAlgoChoice() {
+        return this.algoChoice;
     }
 
     public boolean isBlank() {
@@ -156,6 +210,14 @@ public class Scenario {
     }
     public Disaster getDisasterType() {
         return this.disaster;
+    }
+
+    public double getAvgAge() {
+        return this.avgAge;
+    }
+
+    public int getAvgAgeWeight() {
+        return this.avgAgeWeight;
     }
 
     public ArrayList<Location> getLocations() {

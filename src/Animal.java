@@ -44,6 +44,21 @@ public class Animal extends Character {
         return out;
     }
 
+
+    @Override
+    public String toLogString() {
+        return String.join(",",
+                "animal",
+                gender.toString().toLowerCase(),
+                Integer.toString(age),
+                bodyType.toString().toLowerCase(),
+                "",
+                "",
+                species.toString().toLowerCase(),
+                Boolean.toString(isPet).toUpperCase()
+        );
+    }
+
     /*
     GETTERS AND SETTERS
      */

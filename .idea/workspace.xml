@@ -4,18 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="07aa1ea1-01ac-4916-86ac-d77cfd1496f6" name="Changes" comment="refactored Location out of Scenario">
-      <change afterPath="$PROJECT_DIR$/src/Statistic.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/java/RescueBotTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+    <list default="true" id="07aa1ea1-01ac-4916-86ac-d77cfd1496f6" name="Changes" comment="added printing of &quot;statistic&quot;">
+      <change afterPath="$PROJECT_DIR$/src/Decider.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/Logger.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/java/ScenarioTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/RescueBot.iml" beforeDir="false" afterPath="$PROJECT_DIR$/RescueBot.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Animal.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Animal.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Coordinates.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Coordinates.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Character.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Character.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Location.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Location.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Person.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Person.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/RescueBot.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/RescueBot.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Scenario.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Scenario.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/ScenarioManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/ScenarioManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/java/RescueBotTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/test/java/RescueBotTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,8 +27,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Class" />
         <option value="JUnit5 Test Class" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -34,11 +36,16 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$USER_HOME$/Library/Java/JavaVirtualMachines/openjdk-20.0.1/Contents/Home/lib/src.zip!/java.base/java/lang/AssertionError.java" root0="SKIP_INSPECTION" />
     <setting file="jar://$USER_HOME$/Library/Java/JavaVirtualMachines/openjdk-20.0.1/Contents/Home/lib/src.zip!/java.base/java/lang/Object.java" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/Library/Java/JavaVirtualMachines/openjdk-20.0.1/Contents/Home/lib/src.zip!/java.base/java/util/Optional.java" root0="SKIP_INSPECTION" />
     <setting file="jar://$USER_HOME$/Library/Java/JavaVirtualMachines/openjdk-20.0.1/Contents/Home/lib/src.zip!/java.base/java/util/Scanner.java" root0="SKIP_INSPECTION" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="NamedScopeManager">
+    <scope name="All except generated" pattern="!src:*.class" />
   </component>
   <component name="ProjectId" id="2QtrgA4mGJUrGWZZ2iDRIvO0T88" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -62,13 +69,16 @@
     "com.intellij.testIntegration.createTest.CreateTestDialog.includeInheritedMembers": "true",
     "create.test.in.the.same.root": "true",
     "jdk.selected.JAVA_MODULE": "openjdk-20",
-    "settings.editor.selected.configurable": "configurable.group.editor"
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "project.scopes"
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/test" />
       <recent name="$PROJECT_DIR$/src" />
+      <recent name="$PROJECT_DIR$/test" />
     </key>
     <key name="CreateTestDialog.Recents.Supers">
       <recent name="" />
@@ -77,7 +87,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.RescueBotTest.name">
+  <component name="RunManager" selected="JUnit.ScenarioTest.averageAgeTest">
     <configuration name="RescueBot" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="RescueBot" />
       <module name="RescueBot" />
@@ -97,10 +107,21 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ScenarioTest.averageAgeTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="RescueBot" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="MAIN_CLASS_NAME" value="ScenarioTest" />
+      <option name="METHOD_NAME" value="averageAgeTest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.RescueBotTest.name" />
+        <item itemvalue="JUnit.ScenarioTest.averageAgeTest" />
         <item itemvalue="Application.RescueBot" />
+        <item itemvalue="JUnit.RescueBotTest.name" />
       </list>
     </recent_temporary>
   </component>
@@ -134,7 +155,14 @@
       <option name="project" value="LOCAL" />
       <updated>1686383071894</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="added printing of &quot;statistic&quot;">
+      <created>1686616866080</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1686616866080</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -152,7 +180,8 @@
     <MESSAGE value="initial commit" />
     <MESSAGE value="added csv parser" />
     <MESSAGE value="refactored Location out of Scenario" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactored Location out of Scenario" />
+    <MESSAGE value="added printing of &quot;statistic&quot;" />
+    <option name="LAST_COMMIT_MESSAGE" value="added printing of &quot;statistic&quot;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -168,5 +197,8 @@
         <PinnedItemInfo parentTag="ScenarioManager" memberName="warnings" />
       </pinned-members>
     </pin-to-top-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/RescueBot$ScenarioTest_averageAgeTest.ic" NAME="ScenarioTest.averageAgeTest Coverage Results" MODIFIED="1686623184706" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" />
   </component>
 </project>

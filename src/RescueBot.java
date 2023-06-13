@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.*;
 
 class InvalidInputException extends Exception {
@@ -15,32 +16,17 @@ class InvalidInputException extends Exception {
  */
 public class RescueBot {
 
-    public static ScenarioManager scenarioManager;
+    public static ScenarioManager scenariosFileManager;
+    public static Logger logFileManager;
+    private static File logFile;
     public static Scanner keyboard = new Scanner(System.in);
-
-    /**
-     * Decides whether to save the passengers or the pedestrians
-     * param Scenario scenario: the ethical dilemma
-     * return Decision: which group to save
-     */
-//    public static Coordinates decide(Scenario scenario) {
-//        // a very simple decision engine
-//        // TODO: take into account at least 5 characteristics
-//
-//        // 50/50
-//        if(Math.random() > 0.5) {
-//            return scenario.getLocation(1);
-//        } else {
-//            return scenario.getLocation(2);
-//        }
-//    }
-
     /**
      * Program entry
      */
     public static void main(String[] args){
 
-        scenarioManager = new ScenarioManager();
+        scenariosFileManager = new ScenarioManager();
+        logFileManager = new Logger();
 
         parseArgs(args);
         printWelcome();
@@ -57,14 +43,22 @@ public class RescueBot {
         switch (input) {
             case "judge", "j" -> {
                 judge();
+                printMainMenu();
+                awaitUserInput();
             }
             case "run", "r" -> {
-                //
-                break;
+                try {
+                    simulate();
+                } catch (InvalidInputException e) {
+                    System.err.println("ERROR: Could not run simulation");
+                }
+                printMainMenu();
+                awaitUserInput();
             }
             case "audit", "a" -> {
-                //
-                break;
+                audit();
+                printMainMenu();
+                awaitUserInput();
             }
             case "quit", "q" -> {
                 System.out.println("Thank you for using RescueBot.");
@@ -78,14 +72,68 @@ public class RescueBot {
         }
     }
 
+    private static void  audit() {
+        ScenarioManager savedScenarios;
+        try {
+            savedScenarios = logFileManager.readLog();
+        } catch (FileNotFoundException e) {
+            System.out.println("No history found. Press enter to return to main menu.");
+            System.out.print("› ");
+            keyboard.nextLine();
+            keyboard.nextLine();
+            return;
+        }
+        HashMap<String, Statistic> userStats = mergeStatistic(savedScenarios.getNumScenarios(), true, savedScenarios);
+        HashMap<String,Statistic> algoStats = mergeStatistic(savedScenarios.getNumScenarios(), false, savedScenarios);
+        if (!algoStats.isEmpty() && !userStats.isEmpty()) {
+            printStatistic(savedScenarios.getNumScenarios(), "Algorithm Audit",  algoStats);
+            System.out.println();
+            printStatistic(savedScenarios.getNumScenarios(), "User Audit", userStats);
+        } else if (!userStats.isEmpty()) {
+            printStatistic(savedScenarios.getNumScenarios(), "User Audit", userStats);
+        } else if (!algoStats.isEmpty()) {
+            printStatistic(savedScenarios.getNumScenarios(), "Algorithm Audit", algoStats);
+        } else {
+            System.out.println("No history found. Press enter to return to main menu.");
+            System.out.print("› ");
+            keyboard.nextLine();
+            keyboard.nextLine();
+            return;
+        }
+        System.out.println("That's all. Press Enter to return to main menu.");
+        System.out.print("› ");
+        keyboard.nextLine();
+        keyboard.nextLine();
+    }
+
+    private static void simulate() throws InvalidInputException {
+        ArrayList<Scenario> scenarios = scenariosFileManager.getScenarios();
+        Decider decider = new Decider();
+        for (int i = 0; i < scenarios.size(); i++ ) {
+            Scenario scenario = scenarios.get(i);
+            int decision = decider.decide(scenario);
+            scenario.setAlgoChoice(decision);
+            try {
+                scenario.updateAlgoStatistics();
+            } catch (NoSuchElementException e) {
+                System.exit(1);
+            }
+        }
+        HashMap<String, Statistic> statistic = mergeStatistic(scenariosFileManager.getNumScenarios(), false, scenariosFileManager);
+        printStatistic(scenariosFileManager.getNumScenarios(), "Statistic", statistic) ;
+        logFileManager.writeLog(scenariosFileManager);
+        System.out.println("That's all. Press Enter to return to main menu.");
+        System.out.print("› ");
+        keyboard.nextLine();
+        keyboard.nextLine();
+    }
     private static void judge() {
         boolean consent = collectConsent();
-        ArrayList<Scenario> scenarios = scenarioManager.getScenarios();
-        for (int i = 0; i < scenarioManager.getNumScenarios(); i++) {
-            if (i == 3) {
-                HashMap<String, Statistic> statistic = mergeStatistic(i, true);
-                printStatistic(i, true, statistic);
-                // printStatistic();
+        ArrayList<Scenario> scenarios = scenariosFileManager.getScenarios();
+        for (int i = 0; i < scenariosFileManager.getNumScenarios(); i++ ) {
+            if ( i == 3 ) {
+                HashMap<String, Statistic> statistic = mergeStatistic(i, true, scenariosFileManager);
+                printStatistic(i, "Statistic", statistic);
                 System.out.println("Would you like to continue? (yes/no)");
                 while (true) {
                     try {
@@ -108,25 +156,37 @@ public class RescueBot {
                System.out.print("› ");
                try {
                    int input = keyboard.nextInt();
-                   if ( input >= 1 && input <= scenario.getLocations().size() + 1 ) {
+                   if ( input >= 1 && input <= scenario.getLocations().size() ) {
                        scenario.setUserChoice(input);
                        break;
                    } else throw new InvalidInputException();
-               } catch (InvalidInputException | InputMismatchException e) {
+               } catch (InvalidInputException e) {
+                   System.out.println("Invalid response! To which location should RescueBot be deployed?");
+               } catch (InputMismatchException e) {
+                   keyboard.next();
                    System.out.println("Invalid response! To which location should RescueBot be deployed?");
                }
            }
+           try {
+               scenario.updateUserStatistics();
+           } catch (NoSuchElementException e) {
+               System.err.println("ERROR: Could not update user statistics");
+               System.exit(1);
+           }
         }
-        HashMap<String, Statistic> statistic = mergeStatistic(scenarioManager.getNumScenarios(), true);
-        printStatistic(scenarioManager.getNumScenarios(), true, statistic);
+        HashMap<String, Statistic> statistic = mergeStatistic(scenariosFileManager.getNumScenarios(), true, scenariosFileManager);
+        printStatistic(scenariosFileManager.getNumScenarios(), "Statistic", statistic) ;
+        if (consent) {
+            logFileManager.writeLog(scenariosFileManager);
+        }
     }
 
-    private static void printStatistic(int nRuns, boolean user, HashMap<String, Statistic> stats) {
+    private static void printStatistic(int nRuns, String message, HashMap<String, Statistic> stats) {
 
         ArrayList<String> stringList = new ArrayList<>();
 
         System.out.println("======================================");
-        System.out.println("# Statistic");
+        System.out.printf("# %s%n", message);
         System.out.println("======================================");
         System.out.printf("- %% SAVED AFTER %d RUNS%n", nRuns);
 
@@ -143,19 +203,31 @@ public class RescueBot {
             System.out.println(line.toLowerCase());
         }
         System.out.println("--");
+
+        double avgAge = 0;
+        int totalWeight = 0;
+        for (int i = 0; i < Math.min(nRuns, scenariosFileManager.getNumScenarios()); i++ ) {
+            Scenario scenario = scenariosFileManager.getScenarios().get(i);
+            int ageWeighting = scenario.getAvgAgeWeight();
+            avgAge += ( scenario.getAvgAge() * ageWeighting );
+            totalWeight += ageWeighting;
+        }
+        avgAge = avgAge / totalWeight;
+        System.out.printf("average age: %2.2f%n", avgAge);
     }
 
-    private static HashMap<String, Statistic> mergeStatistic(int nRuns, boolean user) {
-        nRuns = Math.min(nRuns, scenarioManager.getNumScenarios());
+    private static HashMap<String, Statistic> mergeStatistic(int nRuns, boolean user, ScenarioManager fileManager) {
+        nRuns = Math.min(nRuns, fileManager.getNumScenarios());
 
-        ArrayList<Scenario> scenarios = scenarioManager.getScenarios();
+        ArrayList<Scenario> scenarios = fileManager.getScenarios();
         HashMap<String, Statistic> hm = (user) ? scenarios.get(0).getUserStatistics() : scenarios.get(0).getAlgoStatistics();
-        HashSet<String> keySet = new HashSet<>(hm.keySet());
+        HashSet<String> keySet = (hm != null) ? new HashSet<>(hm.keySet()) : new HashSet<>();
 
         for (int i = 1; i < nRuns; i++) {
             Scenario scenario = scenarios.get(i);
             HashMap<String, Statistic> hm2 = (user) ? scenario.getUserStatistics() : scenario.getAlgoStatistics();
-            keySet.addAll(new HashSet<>(hm2.keySet()));
+            HashSet<String> keySet2 = (hm2 != null) ? new HashSet<>(hm2.keySet()) : new HashSet<>();
+            keySet.addAll(keySet2);
             for (String key : keySet) {
                 Statistic stat1 = hm.get(key);
                 Statistic stat2 = hm2.get(key);
@@ -192,14 +264,14 @@ public class RescueBot {
 
 
     private static void printWarnings() {
-        ArrayList<String> warnings = scenarioManager.getWarnings();
+        ArrayList<String> warnings = scenariosFileManager.getWarnings();
         for (String warning : warnings) {
            System.out.println(warning);
         }
     }
 
     private static void printScenariosImported() {
-        int numScenariosImported = scenarioManager.getNumScenarios();
+        int numScenariosImported = scenariosFileManager.getNumScenarios();
         System.out.printf("%d scenarios imported.%n", numScenariosImported);
     }
 
@@ -248,10 +320,9 @@ public class RescueBot {
                     printHelp();
                     System.exit(1);
                 } else {
-                    File file;
-                    file = new File(args[++i]);
+                    File scenariosFile = new File(args[++i]);
                    try {
-                       scenarioManager.loadFromScenariosFile(file);
+                       scenariosFileManager.parseCSV(scenariosFile, false);
                     } catch (FileNotFoundException e) {
                        System.err.println(e.getClass().getCanonicalName() + ": could not find scenarios file.");
                        System.exit(1);
@@ -263,13 +334,7 @@ public class RescueBot {
                     printHelp();
                     System.exit(1);
                 } else {
-                    try {
-                        //TODO: read logfile
-                        // scenarioManager.checkFile(args[++i]);
-                        throw new FileNotFoundException();
-                    } catch (FileNotFoundException e) {
-                        System.err.println("WARNING: logfile not found!");
-                    }
+                    logFileManager.setPath(Paths.get(args[++i]));
                 }
             }
         }

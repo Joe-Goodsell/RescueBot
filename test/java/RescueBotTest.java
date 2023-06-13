@@ -4,6 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class RescueBotTest {
     @Test
-    void name() {
+    void mergeStatisticTest() {
     }
 }

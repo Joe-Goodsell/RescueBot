@@ -41,6 +41,12 @@ public class Location {
     /*
     METHODS
      */
+    public String toLogString() {
+        return String.format("location:%s;%s;%s,,,,,,,",
+                coordinates.getLatitude(),
+                coordinates.getLongitude(),
+                legality.toString().toLowerCase());
+    }
     public Location copy() {
         return new Location(this);
     }

@@ -69,7 +69,19 @@ public class Person extends Character {
            this.ageCategory = AgeCategory.SENIOR;
        }
    }
-
+    @Override
+    public String toLogString() {
+        return String.join(",",
+                "human",
+                gender.toString().toLowerCase(),
+                Integer.toString(age),
+                bodyType.toString().toLowerCase(),
+                profession.toString().toLowerCase(),
+                Boolean.toString(pregnant).toUpperCase(),
+                "",
+                ""
+        );
+    }
    /*
    GETTERS AND SETTERS
     */

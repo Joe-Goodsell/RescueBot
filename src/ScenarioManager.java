@@ -38,17 +38,6 @@ public class ScenarioManager {
 
     }
 
-    public void loadFromScenariosFile(File scenarioFile) throws FileNotFoundException {
-        try {
-            parseCSV(scenarioFile);
-        } catch (FileNotFoundException e) {
-            throw new FileNotFoundException();
-        }
-    }
-
-    public void writeLogFile() {
-
-    }
 
 
 //    public ScenarioManager(String path) {
@@ -70,25 +59,28 @@ public class ScenarioManager {
         return scenarios;
     }
 
-    public void parseCSV(File file) throws FileNotFoundException {
+    public void parseCSV(File file, boolean isLog) throws FileNotFoundException {
         Scenario currentScenario = null;
         Location currentLocation = null;
 
         int lineNumber = 0;
         Scanner parser;
         parser = new Scanner(file);
-        parser.nextLine();
+
+        if (!isLog) { // only scenarios files have header that we need to skip
+            parser.nextLine();
+        }
 
         while (parser.hasNextLine()) {
             lineNumber++;
-            Object[] current = parseLine(parser.nextLine(), lineNumber, currentScenario, currentLocation, false);
+            Object[] current = parseLine(parser.nextLine(), lineNumber, currentScenario, currentLocation, false, isLog);
             currentScenario = (Scenario) current[0];
             currentLocation = (Location) current[1];
         }
-        Object[] dummy = parseLine("", 0, currentScenario, currentLocation, true); // required for adding final scenario
+        Object[] dummy = parseLine("", 0, currentScenario, currentLocation, true, isLog); // required for adding final scenario
     }
 
-    public Object[] parseLine(String line, int lineNumber, Scenario currentScenario, Location currentLocation, boolean cleanup) {
+    public Object[] parseLine(String line, int lineNumber, Scenario currentScenario, Location currentLocation, boolean cleanup, boolean isLog) {
         Character currentCharacter = null;
         String[] elements = line.split(",", -1);
 
@@ -105,12 +97,21 @@ public class ScenarioManager {
             // create new scenario, saving old one if it exists
             if (currentScenario != null) {
                 currentScenario.addLocation(currentLocation.copy());
+                if (isLog) {
+                    // if reading from logfile, we need to update scenario's stats
+                    try {
+                        currentScenario.updateStatistics();
+                    } catch (NoSuchElementException e) {}
+                }
                 scenarios.add(currentScenario.copy());
             }
             currentScenario = new Scenario();
             currentLocation = null;
 
-            String disasterTypeString = elements[0].substring(elements[0].indexOf(":") + 1);
+            String[] substrings = elements[0].split(";"); // splits scenario description parameters
+
+            // set scenario's disaster type
+            String disasterTypeString = substrings[0].substring(substrings[0].indexOf(":")+1);
             Scenario.Disaster disasterType = Stream.of(Scenario.Disaster.values())
                     .filter(p -> p.toString().equalsIgnoreCase(disasterTypeString))
                     .findFirst()
@@ -122,8 +123,40 @@ public class ScenarioManager {
             } catch (InvalidCharacteristicException e) {
                 currentScenario.setDisasterType();
             }
-            return new Object[] { currentScenario, null }; // go to next line
+
+            /*
+            Set user's and algorithm's choices if they exist. Only relevant for reading logfile.
+            */
+            if (isLog) {
+                String userChoiceString = substrings[1].substring(substrings[1].indexOf(":")+1);
+                if (!userChoiceString.equalsIgnoreCase("null")) {
+                    int choice = Integer.parseInt(userChoiceString);
+                    try {
+                        currentScenario.setUserChoice(choice);
+                    } catch (InvalidInputException e) {
+                        System.err.println("ERROR: Attempting to set invalid user choice.");
+                        System.exit(1);
+                    }
+                }
+
+                String algoChoiceString = substrings[2].substring(substrings[1].indexOf(":")+1);
+                if (!algoChoiceString.equalsIgnoreCase("null")) {
+                    int choice = Integer.parseInt(algoChoiceString);
+                    try {
+                        currentScenario.setAlgoChoice(choice);
+                    } catch (InvalidInputException e) {
+                        System.err.println("ERROR: Attempting to set invalid algorithm choice.");
+                        System.exit(1);
+                    }
+                }
+            }
+            // once new scenario is parsed, go to next line
+            return new Object[] { currentScenario, null };
+
         } else if (elements[0].contains("location")) {
+            /*
+            This line will contain information about the Locations within a scenario
+             */
 
             if (currentLocation != null) {
                 // if currentLocation already exists, add it to the current scenario
@@ -131,11 +164,11 @@ public class ScenarioManager {
                 currentScenario.addLocation(currentLocation.copy());
             }
 
-            // create new Location
+            // create new Location to add location info and characters to
             currentLocation = new Location();
 
-             String[] data = elements[0].substring(elements[0].indexOf(":") + 1).split(";");
-             currentLocation = new Location(new Coordinates(data[0], data[1]));
+            String[] data = elements[0].substring(elements[0].indexOf(":") + 1).split(";");
+            currentLocation = new Location(new Coordinates(data[0], data[1]));
 
             Location.Legality legality = Stream.of(Location.Legality.values())
                     .filter(p -> p.toString().equalsIgnoreCase(data[2]))
@@ -150,6 +183,7 @@ public class ScenarioManager {
             }
             return new Object[] { currentScenario, currentLocation }; // go to next line
         } else {
+            // if line does not begin with `scenario` or `location`, add characters!
             try {
                 if (elements[0].equalsIgnoreCase("human")) {
                     currentCharacter = new Person();
@@ -163,7 +197,7 @@ public class ScenarioManager {
                 return new Object[] { currentScenario, currentLocation };
             }
         }
-
+        // here we know that we are in a `character` line of the logfile/scenarios file
         Character.Gender gender = Stream.of(Character.Gender.values())
                 .filter(p -> p.toString().equalsIgnoreCase(elements[1]))
                 .findFirst()

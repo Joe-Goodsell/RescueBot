@@ -48,6 +48,10 @@ public class Character {
        return "a stock character";
     }
 
+    public String toLogString() {
+        return "<<< PLACEHOLDER >>>";
+    }
+
     /*
     GETTERS AND SETTERS
      */
