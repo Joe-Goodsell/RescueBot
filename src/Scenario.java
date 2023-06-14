@@ -1,12 +1,9 @@
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 public class Scenario {
 
     enum Disaster{
-        FLOOD, BUSHFIRE, CYCLONE
+        FLOOD, BUSHFIRE, CYCLONE, EARTHQUAKE
     }
 
     private Optional<Integer> userChoice;
@@ -31,7 +28,7 @@ public class Scenario {
     public Scenario() {
         this.userStatistics = new HashMap<>();
         this.algoStatistics = new HashMap<>();
-        this.locations = new ArrayList<Location>();
+        this.locations = new ArrayList<>();
         this.userChoice = Optional.empty();
         this.algoChoice = Optional.empty();
     }
@@ -48,6 +45,16 @@ public class Scenario {
         this.algoChoice = that.getAlgoChoice();
         this.userStatistics = that.userStatistics;
         this.algoStatistics = that.algoStatistics;
+    }
+
+    public Scenario(boolean isRandom) {
+        this();
+        Random rand = new Random();
+        Object[] disasterArr = Arrays.stream(Disaster.values()).toArray();
+        this.disaster = (Disaster) disasterArr[rand.nextInt(disasterArr.length)];
+        for (int i = 0; i < rand.nextInt(2, 5); i++) {
+           locations.add(new Location(true));
+        }
     }
     /*
     METHODS
@@ -119,13 +126,13 @@ public class Scenario {
         for (int i=0; i < locations.size(); i++) {
             Location location = locations.get(i);
 
-            int choice = 0;
+            boolean isChoice;
             try {
-                choice = (isUser) ? userChoice.get() : algoChoice.get();
+                int choice = (isUser) ? userChoice.get() : algoChoice.get();
+                isChoice = (choice == i+1);
             } catch (NoSuchElementException e) {
-                throw new NoSuchElementException();
+                isChoice = false;
             }
-            boolean isChoice = (choice == i + 1);
             boolean trespassing = location.getLegality().toString().equalsIgnoreCase("trespassing");
             ArrayList<Character> characters = location.getCharacters();
 
@@ -170,12 +177,6 @@ public class Scenario {
     }
 
     // choices are indexed from 1!
-
-    private void checkChoice(int choice) throws InvalidInputException {
-        /*
-         TODO: do I need this?
-          */
-    }
     public void setUserChoice(int choice) throws InvalidInputException {
         this.userChoice = Optional.of(choice);
     }

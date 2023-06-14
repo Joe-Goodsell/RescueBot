@@ -1,3 +1,6 @@
+import java.util.Arrays;
+import java.util.Random;
+
 public class Animal extends Character {
 
     enum Species {
@@ -26,6 +29,13 @@ public class Animal extends Character {
 
     public Animal(Animal that) {
         this(that.gender, that.age, that.bodyType, that.species, that.isPet);
+    }
+
+    public Animal(boolean isRandom) {
+        super(true);
+        Object[] speciesArr = Arrays.stream(Species.values()).filter(p -> !p.equals(Species.UNKNOWN)).toArray();
+        this.species = (Species) speciesArr[new Random().nextInt(speciesArr.length)];
+        this.isPet = (Math.random() > 0.7);
     }
 
     /*

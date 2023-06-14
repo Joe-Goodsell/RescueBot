@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Random;
 
 public class Location {
 
@@ -19,13 +21,25 @@ public class Location {
      */
     public Location() {
         this.characters = new ArrayList<Character>();
-        this.isBlank = false;
     }
 
-    public Location(boolean asBlank) {
-        this.characters = new ArrayList<Character>();
-        this.isBlank = asBlank;
+    public Location(boolean isRandom) {
+        Random rand = new Random();
+        this.characters = new ArrayList<>();
+        this.coordinates = new Coordinates(true);
+        Object[] legalityArr = Arrays.stream(Legality.values()).toArray();
+        this.legality = (Legality) legalityArr[rand.nextInt(legalityArr.length)];
+
+        int nCharacters = rand.nextInt(2,9);
+        for(int i=0; i < nCharacters; i++) {
+            if (Math.random() > 0.5) {
+                this.addCharacter(new Animal(true));
+            } else {
+                this.addCharacter(new Person(true));
+            }
+        }
     }
+
 
     public Location(Coordinates coordinates) {
         this();
@@ -50,6 +64,8 @@ public class Location {
     public Location copy() {
         return new Location(this);
     }
+
+
 
     /*
     GETTERS AND SETTERS

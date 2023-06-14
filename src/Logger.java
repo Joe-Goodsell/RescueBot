@@ -80,10 +80,9 @@ public class Logger {
         */
         PrintWriter outputStream = null;
         try {
-            outputStream = new PrintWriter(new FileOutputStream(path.toFile()));
+            outputStream = new PrintWriter(new FileOutputStream(path.toFile(), true));
         } catch (FileNotFoundException e) {
             System.err.println("ERROR: could not print results. Target directory does not exist.");
-            System.err.printf("######## Attempted directory was: %s ########%n", path.toString());
             System.exit(1);
         }
         for (Scenario scenario : scenarioManager.getScenarios()) {

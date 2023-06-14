@@ -34,6 +34,14 @@ public class Character {
         this.bodyType = bodyType;
     }
 
+    public Character(boolean isRandom) {
+        this.age = new Random().nextInt(1,99);
+        Object[] gendersArr = Arrays.stream(Gender.values()).filter(p -> !p.equals(Gender.UNKNOWN)).toArray();
+        gender = (Gender) gendersArr[new Random().nextInt(gendersArr.length)];
+        Object[] btArray = Arrays.stream(BodyType.values()).filter(p -> !p.equals(BodyType.UNSPECIFIED)).toArray();
+        bodyType = (BodyType) btArray[new Random().nextInt(btArray.length)];
+    }
+
     public Character(Character that) {
         this(that.getGender(), that.getAge(), that.getBodyType());
     }
@@ -89,13 +97,5 @@ public class Character {
         this.age = DEFAULT_AGE;
     }
 
-    public void initRandom() {
-        this.age = new Random().nextInt(99);
 
-        Gender[] gendersArr = (Gender[]) Arrays.stream(Gender.values()).filter(p -> !p.equals(Gender.UNKNOWN)).toArray();
-        gender = gendersArr[new Random().nextInt(gendersArr.length)];
-
-        BodyType[] btArray = (BodyType[]) Arrays.stream(BodyType.values()).filter(p -> !p.equals(BodyType.UNSPECIFIED)).toArray();
-        bodyType = btArray[new Random().nextInt(btArray.length)];
-    }
 }

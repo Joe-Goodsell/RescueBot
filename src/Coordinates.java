@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class Coordinates {
     private String latitude;
     private String longitude;
@@ -7,6 +9,14 @@ public class Coordinates {
     public Coordinates(String latitude, String longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    public Coordinates(boolean isRandom) {
+        Random rand = new Random();
+        String eastWest = (Math.random() > 0.5) ? "E" : "W";
+        String northSouth = (Math.random() > 0.5) ? "N": "S";
+        this.latitude = String.format("%2.4f %s", (rand.nextInt(-91, 91) + Math.random()), northSouth);
+        this.longitude = String.format("%2.4f %s", (rand.nextInt(-181, 181) + Math.random()), eastWest);
     }
 
     public Coordinates() {

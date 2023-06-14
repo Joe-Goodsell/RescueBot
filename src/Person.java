@@ -1,3 +1,6 @@
+import java.util.Arrays;
+import java.util.Random;
+
 public class Person extends Character {
 
     enum AgeCategory {
@@ -39,24 +42,32 @@ public class Person extends Character {
        this.initAgeCategory();
    }
 
-   /*
+   public Person(boolean isRandom) {
+       super(true);
+       Random rand = new Random();
+       this.initAgeCategory();
+       if (this.ageCategory.equals(AgeCategory.ADULT) || this.ageCategory.equals(AgeCategory.SENIOR)) {
+           Object[] professionArr = Arrays.stream(Person.Profession.values()).filter(p -> !p.equals(DEFAULT_PROFESSION)).toArray();
+           this.profession = (Profession) professionArr[rand.nextInt(professionArr.length)];
+       } else {
+           this.profession = DEFAULT_PROFESSION;
+       }
+       if (this.gender.equals(Gender.FEMALE) && this.ageCategory.equals(AgeCategory.ADULT)) {
+           // if Person is adult female, they are pregnant with p(0.2)
+           double rn = Math.random();
+           this.pregnant = rn > 0.8;
+       }
+
+   }
+
+
+    /*
    METHODS
     */
     @Override
     public Person copy() {
         return new Person(this);
     }
-
-    public void initRandom() {
-       super.initRandom();
-        // classify person based on age
-
-       if (this.gender.equals(Gender.FEMALE)) {
-           // if Person is female, they are pregnant with p(0.1)
-           double rn = Math.random();
-           this.pregnant = rn > 0.9;
-       }
-   }
 
    private void initAgeCategory() {
        if (age <= 4) {
@@ -107,7 +118,7 @@ public class Person extends Character {
     }
    public String toString() {
         String out = String.join(" ", bodyType.toString().toLowerCase(), ageCategory.toString().toLowerCase());
-        if (!profession.equals(Profession.NONE)) {
+        if (!profession.equals(DEFAULT_PROFESSION)) {
             out = String.join(" ", out, profession.toString().toLowerCase());
         }
         out = String.join(" ", out, gender.toString().toLowerCase());

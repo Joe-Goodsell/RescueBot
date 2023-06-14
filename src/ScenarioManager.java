@@ -30,12 +30,20 @@ public class ScenarioManager {
         }
     }
 
-    private ArrayList<Scenario> scenarios = new ArrayList<Scenario>();
-    private ArrayList<String> warnings = new ArrayList<String>();
+    private ArrayList<Scenario> scenarios;
+    private ArrayList<String> warnings;
 
     public ScenarioManager() {
         // initialise default ScenarioManager without file
+        scenarios = new ArrayList<>();
+        warnings = new ArrayList<>();
+    }
 
+    public ScenarioManager(boolean isRandom) {
+        this();
+        for (int i=0; i < new Random().nextInt(2, 5); i++) {
+           scenarios.add(new Scenario(true));
+        }
     }
 
 
@@ -87,6 +95,17 @@ public class ScenarioManager {
         if (cleanup) {
             if (currentScenario != null) {
                 currentScenario.addLocation(currentLocation.copy());
+                if (isLog) {
+                    // attempt update of scenario statistics
+                    try {
+                        if (currentScenario.getUserChoice().isPresent()) {
+                            currentScenario.updateUserStatistics();
+                        }
+                        if (currentScenario.getAlgoChoice().isPresent()) {
+                            currentScenario.updateAlgoStatistics();
+                        }
+                    } catch (NoSuchElementException ignored) {}
+                }
                 scenarios.add(currentScenario.copy());
             }
             return new Object[] { null, null };

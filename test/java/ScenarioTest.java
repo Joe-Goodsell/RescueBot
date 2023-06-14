@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -9,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ScenarioTest {
 
-    @Test
+   @Test
     void averageAgeTest() {
         ScenarioManager scenarioManager = new ScenarioManager();
         try {

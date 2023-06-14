@@ -20,6 +20,8 @@ public class RescueBot {
     public static Logger logFileManager;
     private static File logFile;
     public static Scanner keyboard = new Scanner(System.in);
+    public static final String[] EXCLUDE_VALUES = new String[] { "unknown", "unspecified", "none", "nruns" };
+    public static final HashSet<String> EXCLUDE = new HashSet<>(Arrays.asList(EXCLUDE_VALUES));
     /**
      * Program entry
      */
@@ -86,13 +88,14 @@ public class RescueBot {
         HashMap<String, Statistic> userStats = mergeStatistic(savedScenarios.getNumScenarios(), true, savedScenarios);
         HashMap<String,Statistic> algoStats = mergeStatistic(savedScenarios.getNumScenarios(), false, savedScenarios);
         if (!algoStats.isEmpty() && !userStats.isEmpty()) {
-            printStatistic(savedScenarios.getNumScenarios(), "Algorithm Audit",  algoStats);
+            // TODO: stats are never empty!!!
+            printStatistic(algoStats.get("nruns").getTotal(), "Algorithm Audit",  algoStats);
             System.out.println();
-            printStatistic(savedScenarios.getNumScenarios(), "User Audit", userStats);
+            printStatistic(userStats.get("nruns").getTotal(), "User Audit", userStats);
         } else if (!userStats.isEmpty()) {
-            printStatistic(savedScenarios.getNumScenarios(), "User Audit", userStats);
+            printStatistic(userStats.get("nruns").getTotal(), "User Audit", userStats);
         } else if (!algoStats.isEmpty()) {
-            printStatistic(savedScenarios.getNumScenarios(), "Algorithm Audit", algoStats);
+            printStatistic(algoStats.get("nruns").getTotal(), "Algorithm Audit", algoStats);
         } else {
             System.out.println("No history found. Press enter to return to main menu.");
             System.out.print("› ");
@@ -120,11 +123,10 @@ public class RescueBot {
             }
         }
         HashMap<String, Statistic> statistic = mergeStatistic(scenariosFileManager.getNumScenarios(), false, scenariosFileManager);
-        printStatistic(scenariosFileManager.getNumScenarios(), "Statistic", statistic) ;
+        printStatistic(statistic.get("nruns").getTotal(), "Statistic", statistic) ;
         logFileManager.writeLog(scenariosFileManager);
         System.out.println("That's all. Press Enter to return to main menu.");
         System.out.print("› ");
-        keyboard.nextLine();
         keyboard.nextLine();
     }
     private static void judge() {
@@ -191,6 +193,10 @@ public class RescueBot {
         System.out.printf("- %% SAVED AFTER %d RUNS%n", nRuns);
 
         for (String key : stats.keySet()) {
+            if (EXCLUDE.contains(key.toLowerCase())) {
+                // filter out irrelevant keys such as `none`, `unspecified`, etc.
+                continue;
+            }
             String string = String.format("%s: %3.2f", key, stats.get(key).getRatio());
             stringList.add(string);
         }
@@ -221,12 +227,36 @@ public class RescueBot {
 
         ArrayList<Scenario> scenarios = fileManager.getScenarios();
         HashMap<String, Statistic> hm = (user) ? scenarios.get(0).getUserStatistics() : scenarios.get(0).getAlgoStatistics();
-        HashSet<String> keySet = (hm != null) ? new HashSet<>(hm.keySet()) : new HashSet<>();
+
+        HashSet<String> keySet;
+        if (hm != null) {
+            keySet = new HashSet<>(hm.keySet());
+            // increment number of runs where choice exists
+            Statistic tempNRuns = hm.getOrDefault("nruns", new Statistic());
+            tempNRuns.incrementTotal();
+            hm.put("nruns", tempNRuns);
+        } else {
+            keySet = new HashSet<>();
+        }
+
+        keySet = (hm != null) ? new HashSet<>(hm.keySet()) : new HashSet<>();
 
         for (int i = 1; i < nRuns; i++) {
             Scenario scenario = scenarios.get(i);
             HashMap<String, Statistic> hm2 = (user) ? scenario.getUserStatistics() : scenario.getAlgoStatistics();
-            HashSet<String> keySet2 = (hm2 != null) ? new HashSet<>(hm2.keySet()) : new HashSet<>();
+
+            // again must increment number of runs
+            HashSet<String> keySet2;
+            if (hm2 != null) {
+                keySet2 = new HashSet<>(hm2.keySet());
+                // increment number of runs where choice exists
+                Statistic tempNRuns = hm2.getOrDefault("nruns", new Statistic());
+                tempNRuns.incrementTotal();
+                hm2.put("nruns", tempNRuns);
+            } else {
+                keySet2 = new HashSet<>();
+            }
+
             keySet.addAll(keySet2);
             for (String key : keySet) {
                 Statistic stat1 = hm.get(key);
@@ -310,6 +340,7 @@ public class RescueBot {
     }
 
     private static void parseArgs(String[] args) {
+        boolean scenariosFileProvided = false;
         for (int i=0; i<args.length; i++) {
             if (args[i].equalsIgnoreCase("-h") || args[i].equalsIgnoreCase("--help")) {
                 printHelp();
@@ -317,12 +348,12 @@ public class RescueBot {
             } else if (args[i].equalsIgnoreCase("-s") || args[i].equalsIgnoreCase("--scenarios")) {
                 if (i == args.length-1) {
                     System.err.println("ERROR: no scenario file provided.");
-                    printHelp();
                     System.exit(1);
                 } else {
                     File scenariosFile = new File(args[++i]);
                    try {
                        scenariosFileManager.parseCSV(scenariosFile, false);
+                       scenariosFileProvided = true;
                     } catch (FileNotFoundException e) {
                        System.err.println(e.getClass().getCanonicalName() + ": could not find scenarios file.");
                        System.exit(1);
@@ -337,6 +368,9 @@ public class RescueBot {
                     logFileManager.setPath(Paths.get(args[++i]));
                 }
             }
+        }
+        if (!scenariosFileProvided) {
+            scenariosFileManager = new ScenarioManager(true);
         }
     }
 }
